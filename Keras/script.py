@@ -1,6 +1,11 @@
 from keras.models import load_model
 
-
+operator_map=[
+    {'dense':['gemm','activation']},
+]
+activation=[
+    'relu',
+]
 def loadModel(path):
     model=load_model(path)
     model.load_weights(path)
@@ -35,8 +40,6 @@ def loadModel(path):
             node['type']='input'
             node['shape']=layer._batch_input_shape[1:]
             graph.append(node)
-
-    #print(graph)
-    return graph,model.get_weights()
+    print(graph)
 
 
