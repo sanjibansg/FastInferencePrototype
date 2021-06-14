@@ -2,9 +2,8 @@
 // Author: Sanjiban Sengupta, 2021
 
 #include <Python.h>
-#include "TMVA/PyInitialize.hxx"
 #include "TMVA/RModelParser_Keras.hxx"
-
+#include "TMVA/PyInitialize.hxx"
 
 
 #include <memory>
@@ -14,118 +13,94 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-
 #include "TMVA/Types.h"
-#include "TMVA/SOFIE_common.hxx"
 #include "Rtypes.h"
 #include "TString.h"
-#include "TMVA/MsgLogger.h"
-
 
 #include "TMVA/RModel.hxx"
-#include "TMVA/RModelParser_ONNX.hxx"
-
-
-
-using namespace TMVA;
-using namespace TMVA::Experimental;
-using namespace TMVA::Experimental::SOFIE;
-
-
-
+#include "TMVA/SOFIE_common.hxx"
 
 
 namespace TMVA{
 namespace Experimental{
+namespace SOFIE{
 
 PyObject *fGlobalNS = NULL;
-PyObject *fPyReturn = NULL;
 
-MsgLogger* fLogger;
-MsgLogger& Log()  { return *fLogger; }
-
-unordered_map<std::string, int> Type =
+std::unordered_map<std::string, LayerType> Type =
     {
         {"dense", LayerType::DENSE},
         {"relu", LayerType::RELU},
         {"permute", LayerType::TRANSPOSE}
     };
 
-unordered_map<std::string,int>dType=
+std::unordered_map<std::string,ETensorType>dType=
 {
       {"float32", ETensorType::FLOAT}
 };
 
 namespace INTERNAL{
 
-
-
-
-   std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string input_type){
-
-   std::unique_ptr<ROperator> op;
-
-   float attr_alpha =1.0;
-   float attr_beta =1.0;
-   int_t attr_transA =0;
-   int_t attr_transB =1;
-
-   switch(input_type){
-   case ETensorType::FLOAT:
-         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, input, kernel, bias, output);
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + input_type);
-   }
-
-   return std::move(op);
-
-
-   }
-
-   std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, std::string input_type){
+   std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string dtype)
+   {
       std::unique_ptr<ROperator> op;
-      switch(input_type){
+
+      float attr_alpha =1.0;
+      float attr_beta =1.0;
+      int_t attr_transA =0;
+      int_t attr_transB =1;
+
+      switch(dType.find(dtype)->second){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Gemm<float>(attr_alpha, attr_beta, attr_transA, attr_transB, input, kernel, bias, output));
+         break;
+
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + dtype);
+         }
+
+         return std::move(op);
+   }
+
+   std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, std::string dtype)
+   {
+      std::unique_ptr<ROperator> op;
+      switch(dType.find(dtype)->second){
          case ETensorType::FLOAT:
          op.reset(new ROperator_Relu<float>(input, output));
          break;
          default:
-         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + input_type);
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + dtype);
          }
    return std::move(op);
    }
 
-   std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, std::string input_type){
-
-   std::unique_ptr<ROperator> op;
-   std::vector<int_t> attr_perm=dims;
-
-   switch(input_type){
-   case ETensorType::FLOAT:
-      if (!attr_perm.empty()){
-         op.reset(new ROperator_Transpose<float>(attr_perm, input, output);
-      }else{
-         op.reset(new ROperator_Transpose<float> (input, output);
-      }
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + input_type);
-   }
-
+   std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, std::string dtype)
+   {
+      std::unique_ptr<ROperator> op;
+      std::vector<int_t> attr_perm=dims;
+      switch(dType.find(dtype)->second){
+         case ETensorType::FLOAT:
+            if (!attr_perm.empty()){
+               op.reset(new ROperator_Transpose<float>(attr_perm, input, output));
+               }
+            else{
+               op.reset(new ROperator_Transpose<float> (input, output));
+               }
+         break;
+         default:
+            throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + dtype);
+            }
    return std::move(op);
-
    }
-
-
 
 }
 
 
 
-
-
 namespace PyKeras {
-RModel Parse(std::string filepath){
+
+RModel Parse(std::string filename){
 
    char sep = '/';
    #ifdef _WIN32
@@ -147,28 +122,30 @@ RModel Parse(std::string filepath){
       PyInitialize();
    }
 
-    // Set up private local namespace for each method instance
+   // Set up private local namespace for each method instance
    PyObject *fLocalNS = PyDict_New();
    if (!fLocalNS) {
-      Log() << kFATAL << "Can't init local namespace" << Endl;
+       throw std::runtime_error("Can't init local namespace for Python");
    }
 
-
+   //Extracting model information: For each layer: type,name,activation,dtype,input tensor's name,
+   //output tensor's name, kernel's name, bias's name
+   //None object is returned for if property doesn't belong to layer
    PyRunString("from keras.models import load_model",fLocalNS);
-   PyRunString(TString::Format("model=load_model('%s')",filepath.c_str()),fLocalNS);
-   PyRunString(TString::Format("model.load_weights('%s')",filepath.c_str()),fLocalNS);
+   PyRunString(TString::Format("model=load_model('%s')",filename.c_str()),fLocalNS);
+   PyRunString(TString::Format("model.load_weights('%s')",filename.c_str()),fLocalNS);
    PyRunString("modelData=[]",fLocalNS);
    PyRunString("for idx in range(len(model.layers)):\n"
-            "	layerData={}\n"
+            "  layerData={}\n"
             "  layerData.update({(k,v) for (k,v) in {key:getattr(value,'__name__',None) for (key,value)  in {i:getattr(model.get_layer(index=idx),i,None) for i in ['__class__','activation']}.items()}.items()})\n"
-            "	layerData.update({(k,v) for (k,v) in {i:getattr(model.get_layer(index=idx),i,None) for i in ['name','dtype','input_shape','output_shape','dims']}.items()})\n"
-            "	layerData.update({(k,v) for (k,v) in {key:getattr(value,'name',None) for (key,value)  in {i:getattr(model.get_layer(index=idx),i,None) for i in ['input','output','kernel','bias']}.items()}.items()})\n"
-            "	modelProp.append(layerData)",fLocalNS);
+            "  layerData.update({(k,v) for (k,v) in {i:getattr(model.get_layer(index=idx),i,None) for i in ['name','dtype','dims']}.items()})\n"
+            "  layerData.update({(k,v) for (k,v) in {key:getattr(value,'name',None) for (key,value)  in {i:getattr(model.get_layer(index=idx),i,None) for i in ['input','output','kernel','bias']}.items()}.items()})\n"
+            "  modelProp.append(layerData)",fLocalNS);
 
 
    Py_ssize_t modelIterator, modelSize;
    PyObject* pModel = PyDict_GetItemString(fLocalNS,"modelProp");
-   PyObject* layers;
+   PyObject* layer;
    modelSize = PyList_Size(pModel);
 
    for(modelIterator=0;modelIterator<modelSize;++modelIterator){
@@ -180,59 +157,53 @@ RModel Parse(std::string filepath){
       std::string dtype(PyString_AsString(PyDict_GetItemString(layer,"dtype")));
       std::string input(PyString_AsString(PyDict_GetItemString(layer,"input")));
       std::string output(PyString_AsString(PyDict_GetItemString(layer,"output")));
-      std::string output(PyString_AsString(PyDict_GetItemString(layer,"kernel")));
-      std::string output(PyString_AsString(PyDict_GetItemString(layer,"bias")));
-
-      PyObject* input_shape  = PyDict_GetItemString(layer,"input_shape");
-      PyObject* output_shape = PyDict_GetItemString(layer,"output_shape");
-
+      std::string kernel(PyString_AsString(PyDict_GetItemString(layer,"kernel")));
+      std::string bias(PyString_AsString(PyDict_GetItemString(layer,"bias")));
 
       if(dType.find(dtype)==dType.end())
          throw std::runtime_error("Type error: Layer data type not yet registered in TMVA SOFIE");
 
-
-
-      switch(Type.find(toLower(layerType))->second){
+      switch(Type.find(toLower(type))->second){
          case LayerType::DENSE : {
-            switch(dType.find(dtype)->second){
 
-               case ETensorType::FLOAT :{
                   if(activation != "linear"){
-                     rmodel.AddOperator(std::move(INTERNAL::makeROperator_Gemm(input,name+"_gemm",kernel,shape,input_type)));
+                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"_gemm",kernel,bias,dtype)));
 
                      switch(Type.find(toLower(activation))->second){
                         case LayerType::RELU: {
-                           rmodel.AddOperator(std::move(INTERNAL::makeROperator_Relu(name+"_gemm",output,kernel,shape,dtype)));
+                           rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(name+"_gemm",output,dtype)));
                            break;
+                        }
                         default: throw std::runtime_error("Activation error: TMVA SOFIE does not yet suppport Activation type"+activation);
                         }
                         }
-                        }
-                  else
-                     rmodel.AddOperator(std::move(INTERNAL::makeROperator_Gemm(input,output,kernel,shape,dtype)));
+                  else{
+                     rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,output,kernel,bias,dtype)));
+                  }
                      break;
-                     }
-               default: throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport layer data type"+dtype);
-               }
                }
 
          case LayerType::RELU: {
-            rmodel.AddOperator(std::move(INTERNAL::makeROperator_Relu(input,output,dtype)));  break;
+            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype)));  break;
             }
          case LayerType::TRANSPOSE: {
             PyObject* permute=PyDict_GetItemString(layer,"dims");
             std::vector<int_t>dims;
             for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(permute);++tupleIter)
-               dims.push_back(PyTuple_GetItem(permute,tupleIter));
-            rmodel.AddOperator(std::move(INTERNAL::makeROperator_Transpose(input,output,dims,dtype))); break;
+               dims.push_back((int_t)PyLong_AsLong(PyTuple_GetItem(permute,tupleIter)));
+            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Transpose(input,output,dims,dtype))); break;
             }
          default: throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+dtype);
          }
-
          }
 
+   Py_DECREF(modelIterator);
+   Py_DECREF(layer);
+   Py_DECREF(pModel);
 
-   //model.get_weights() returns weights in list of numpy array format
+   //Extracting model's weights
+   //For every initialized tensor, weightProp will have its name and dtype in string
+   //and value in numpy array
    PyRunString("weight=[]",fLocalNS);
    PyRunString("for idx in range(len(model.get_weights())):\n"
                "  weightProp={}\n"
@@ -241,78 +212,85 @@ RModel Parse(std::string filepath){
                "  weightProp['value']=(model.get_weights())[idx]\n"
                "  weight.append(weightProp)",fLocalNS);
 
-   PyObject *item,*tensorName,weightType;
+   PyObject *weightTensor,*weightValue;
+   PyObject* pWeight = PyDict_GetItemString(fLocalNS,"weight");
    std::vector<RTensor<float>>weights;
 
-   for (Py_ssize_t it = 0; it < PyList_Size(pWeights); it++) {
-   item  = PyList_GetItem(pWeights, it);
-   tensorName  = PyList_GetItem(item,0);
-   std::string weightDtype(PyString_AsString(PyList_GetItem(item,1)));
+   for (Py_ssize_t weightIter = 0; weightIter < PyList_Size(pWeight); weightIter++) {
+      weightTensor  = PyList_GetItem(pWeight, weightIter);
+      std::string weightName(PyString_AsString(PyDict_GetItemString(weightTensor,"name")));
+      std::string weightType(PyString_AsString(PyDict_GetItemString(weightTensor,"dtype")));
+      weightValue   = PyDict_GetItemString(weightTensor,"weight");
+
+      //Converting numpy array to RTensor
+      RTensor<float> value = getArray(weightValue);
+
 
    if(dType.find(weightType)==dType.end())
       throw std::runtime_error("Type error: Initialized tensor type not yet registered in TMVA SOFIE");
 
-   switch(dType.find(type)->second){
-       case ETensorType::FLOAT :
-       array = PyList_Getitem(item,2);
-       RTensor value = getArray(array);
+   switch(dType.find(weightType)->second){
+       case ETensorType::FLOAT : {
        std::shared_ptr<void> data(malloc(value.GetSize() * sizeof(float)), free);
-       std::memcpy(data.get(), value.GetData();, value.GetSize() * sizeof(float));
-       rmodel.AddInitializedTensor(PyString_AsString(tensorName), ETensorType::FLOAT, value.GetShape(), data);
+       std::memcpy(data.get(), value.GetData(), value.GetSize() * sizeof(float));
+       rmodel.AddInitializedTensor(weightName, ETensorType::FLOAT, value.GetShape(), data);
        break;
-
-       default: throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport layer type"+dtype);
+       }
+       default:
+          throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport layer type"+weightType);
       }
      }
 
+   Py_DECREF(weightTensor);
+   Py_DECREF(weightValue);
+   Py_DECREF(pWeight);
 
-      PyRunString("inputs=model.input_names\n",fLocalNS);
-      PyRunString("inputShapes=model.input_shape\n",fLocalNS);
-      PyObject* pInputs      = PyDict_GetItemString(fLocalNS,"inputs");
-      PyObject* pInputShapes = PyDict_GetItemString(fLocalNS,"inputShapes");
-      PyObject* pInputTypes  = PyDict_GetItemString(fLocalNS,"inputTypes");
-      for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(pInputs);++inputIter){
+   //Extracting input tensor info
+   //For every input tensor inputNames will have their names as string,inputShapes will have their
+   //shape as Python Tuple, and inputTypes will have their dtype as string
+   PyRunString("inputNames=model.input_names",fLocalNS);
+   PyRunString("inputShapes=model.input_shape",fLocalNS);
+   PyRunString("inputTypes=[]",fLocalNS);
+   PyRunString("for idx in range(len(model.inputs)):\n"
+               "  inputTypes.append(model.inputs[idx].dtype.__str__()[9:-2])",fLocalNS);
 
-         std::string inputDType(PyString_AsString(PyList_GetItem(pInputTypes,i)));
-         if(dType.find(inputDType)==dType.end())
-            throw std::runtime_error("Type error: Initialized tensor type not yet registered in TMVA SOFIE");
+   PyObject* pInputs   = PyDict_GetItemString(fLocalNS,"inputNames");
+   PyObject* pInputShapes  = PyDict_GetItemString(fLocalNS,"inputShapes");
+   PyObject* pInputTypes   = PyDict_GetItemString(fLocalNS,"inputTypes");
+   for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(pInputs);++inputIter){
+      std::string inputDType(PyString_AsString(PyList_GetItem(pInputTypes,inputIter)));
+      if(dType.find(inputDType)==dType.end())
+         throw std::runtime_error("Type error: Initialized tensor type not yet registered in TMVA SOFIE");
 
       switch(dType.find(inputDType)->second){
 
-         case 1:
-         std::vector<int>shape;
-         std::string name(PyString_AsString(PyList_GetItem(pInputs,i)));
-
-         PyObject* shapeTuple=PyList_GetItem(pInputShapes,i);
-         std::string inputType(PyString_AsString(PyList_GetItem(pInputs,i)));
+         case ETensorType::FLOAT : {
+         std::vector<size_t>inputShape;
+         std::string inputName(PyString_AsString(PyList_GetItem(pInputs,inputIter)));
+         PyObject* shapeTuple=PyList_GetItem(pInputShapes,inputIter);
          for(Py_ssize_t tupleIter=1;tupleIter<PyTuple_Size(shapeTuple);++tupleIter){
-               shape.push_back((int)PyInt_AsLong(PyTuple_GetItem(shapeTuple,tupleiter)));
+               inputShape.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(shapeTuple,tupleIter)));
          }
 
-         rmodel.AddInputTensorInfo(name, type, fShape);
+         rmodel.AddInputTensorInfo(inputName, ETensorType::FLOAT, inputShape);
          break;
+         }
 
-         default: throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport layer type"+dType.find(weightType)->first);
-
-
-      }
-
-
-
+         default:
+         throw std::runtime_error("Type error: TMVA SOFIE does not yet suppport layer type"+inputDType);
 
       }
+      }
 
+      Py_DECREF(pInputs);
+      Py_DECREF(pInputShapes);
+      Py_DECREF(pInputTypes);
 
-
-
-
-
-
-
-
-
-
+     Py_Finalize();
+      return rmodel;
 
      }
    }
+}
+}
 }
