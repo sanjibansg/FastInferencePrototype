@@ -54,7 +54,7 @@ def _model_to_graph(model, args):
     in_vars, in_desc = torch.jit._flatten(tuple(args) + tuple(params))
     graph = _propagate_and_assign_input_shapes(  method_graph, tuple(in_vars), False, False)
     return graph
-
+'''
 import torchvision
 from torch._C import _propagate_and_assign_input_shapes
 
@@ -64,14 +64,14 @@ m = torch.jit.script(model)
 #traced = torch.jit.trace(model, dummy)
 #graph=_model_to_graph(traced,dummy)
 #print(graph)
-
+'''
 for i in graph.inputs():
  print(i.type().dim(),end=" ")
  
 
 for i in graph.nodes():
  print(i.kind())
-'''
+
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
@@ -84,7 +84,12 @@ class Net(nn.Module):
 
 n = Net()
 #model=torch.jit.load('model.pt')
-
-m = torch.jit.script(n)    
+'''  
+m.eval()
+m=torch.jit.freeze(m)
+print(dir(m.graph))
+#for i in m.graph.nodes():
+# print(dir(i))
+  
 torch.jit.save(m, "model.pt")
 
