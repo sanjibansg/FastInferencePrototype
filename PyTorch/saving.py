@@ -85,9 +85,9 @@ class Net(nn.Module):
 n = Net()
 #model=torch.jit.load('model.pt')
 '''  
-m.eval()
-m=torch.jit.freeze(m)
-print(dir(m.graph))
+
+
+#print(dir(m.graph))
 #for i in m.graph.nodes():
 # print(dir(i))
   

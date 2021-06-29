@@ -31,8 +31,7 @@ def _to_graph(model, args):
 traced_model_savepath = 'traced.pt'
 
 '''
-from torch.onnx.utils import _model_to_graph,select_model_mode_for_export,_decide_keep_init_as_input,_decide_add_node_names,_decide_constant_folding,_decide_external_data_format
-from torch.onnx.utils import _decide_input_format,_validate_dynamic_axes
+from torch.onnx.utils import _model_to_graph
 
 import torch
 import torch.nn as nn
@@ -46,11 +45,11 @@ class Net(nn.Module):
         return self.fc1(x)
 
 n = Net()
-model=torch.jit.load('model.pt')
-dummy=torch.rand(1,3,224,224)
+#model=torch.jit.load('model.pt')
+#dummy=torch.rand(1,3,224,224)
 example_weight = torch.rand(1, 1, 3, 3)
 example_forward_input = torch.rand(1, 1, 3, 3)
-torch.onnx.export(n,example_forward_input,"net.onnx")
+#torch.onnx.export(n,example_forward_input,"net.onnx")
 
 # Trace a specific method and construct `ScriptModule` with
 # a single `forward` method
@@ -67,7 +66,7 @@ op=n(example_forward_input)
 
 
 model = torch.jit.load('model.pt')
-
+model.eval()
 dummy=torch.rand(1,3,224,224)
 op=model(dummy)
 
