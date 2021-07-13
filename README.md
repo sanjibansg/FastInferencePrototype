@@ -17,3 +17,5 @@ Restructured SOFIE to avoid dependency conflicts with required versions of Proto
 ### serialisation
 Serialising RModel and ROperators for saving them into ROOT format.
 
+### Collections
+Collections of relevant documents, manuals, user-guides for the project.
