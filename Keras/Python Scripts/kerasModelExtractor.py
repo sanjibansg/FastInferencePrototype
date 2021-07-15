@@ -7,15 +7,30 @@ print(kerasModel.summary())
 globals().update(locals())
 
 
+
 modelData=[]
 for idx in range(len(kerasModel.layers)):
-    layerData={}
+    layer=kerasModel.get_layer(index=idx)
+    layerData=[]
     globals().update(locals())
-    layerData.update({(k,v) for (k,v) in {key:getattr(value,'__name__',None) for (key,value)  in {i:getattr(kerasModel.get_layer(index=idx),i,None) for i in ['__class__','activation']}.items()}.items()})
-    layerData.update({(k,v) for (k,v) in {i:getattr(kerasModel.get_layer(index=idx),i,None) for i in ['name','dtype','dims']}.items()})
-    layerData.update({(k,v) for (k,v) in {key:getattr(value,'name',None) for (key,value)  in {i:getattr(kerasModel.get_layer(index=idx),i,None) for i in ['input','output','kernel','bias']}.items()}.items()})
+    layerData.append(layer.__class__.__name__)
+    layerData.append(layer.get_config())
+    layerData.append(layer.input)
+    layerData.append(layer.output)
+    layerData.append([x.name for x in layer.weights])
     modelData.append(layerData)
 
+print(modelData)
+
+'''   
+modelData=[]
+for idx in range(len(kerasModel.layers)):
+ layerData=[]
+ layerData.extend([x.name for x in kerasModel.get_layer(index=idx).weights])
+ modelData.append(layerData)    
+'''
+'''
+print(modelData)
 #Extracting model weights (initialized tensors)
 weight=[]
 for idx in range(len(kerasModel.get_weights())):
@@ -25,7 +40,7 @@ for idx in range(len(kerasModel.get_weights())):
     weightProp['value']=(kerasModel.get_weights())[idx]
     weight.append(weightProp)
     
-print(weight)
+#print(weight)
 
 inputNames=kerasModel.input_names
 inputShapes=kerasModel.input_shape
@@ -35,10 +50,11 @@ for idx in range(len(kerasModel.inputs)):
     
     
 
-print(inputTypes)
+#print(inputTypes)
 
 
 #Extracting model information
+'''
 '''
 modelData=[]
 for idx in range(len(kerasModel.layers)):

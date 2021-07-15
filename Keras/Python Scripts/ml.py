@@ -2,7 +2,7 @@
 from numpy import loadtxt
 import keras
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense,ReLU
 # load pima indians dataset
 dataset = loadtxt("pima-indians-diabetes.csv", delimiter=",")
 # split into input (X) and output (Y) variables
@@ -11,8 +11,7 @@ Y = dataset[:,8]
 # define model
 model = Sequential()
 model.add(Dense(12, input_dim=8, activation='relu'))
-model.add(Dense(8, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
+model.add(ReLU())
 # compile model
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 # Fit the model

@@ -120,28 +120,30 @@ RModel Parse(std::string filename){
    PyRunString("globals().update(locals())",fGlobalNS,fLocalNS);
    PyRunString("modelData=[]",fGlobalNS,fLocalNS);
    PyRunString("for idx in range(len(model.layers)):\n"
+            "  layer=model.get_layer(index=idx)\n"
             "  globals().update(locals())\n"
-            "  layerData={}\n"
-            "  layerData.update({(k,v) for (k,v) in {key:getattr(value,'__name__',None) for (key,value)  in {i:getattr(model.get_layer(index=idx),i,None) for i in ['__class__','activation']}.items()}.items()})\n"
-            "  layerData.update({(k,v) for (k,v) in {i:getattr(model.get_layer(index=idx),i,None) for i in ['name','dtype','dims']}.items()})\n"
-            "  layerData.update({(k,v) for (k,v) in {key:getattr(value,'name',None) for (key,value)  in {i:getattr(model.get_layer(index=idx),i,None) for i in ['input','output','kernel','bias']}.items()}.items()})\n"
+            "  layerData=[]\n"
+            "  layerData.append(layer.__class__.__name__)\n"
+            "  layerData.append(layer.get_config())\n"
+            "  layerData.append(layer.input)\n"
+            "  layerData.append(layer.output)\n"
+            "  layerData.append([x.name for x in layer.weights])\n"
             "  modelData.append(layerData)",fGlobalNS,fLocalNS);
 
 
    Py_ssize_t modelIterator, modelSize;
    PyObject* pModel = PyDict_GetItemString(fLocalNS,"modelData");
-   PyObject* layer;
+   PyObject* layer,attributes,inputs,outputs;
    modelSize = PyList_Size(pModel);
 
    for(modelIterator=0;modelIterator<modelSize;++modelIterator){
       layer=PyList_GetItem(pModel,modelIterator);
 
-      std::string type(PyStringAsString(PyDict_GetItemString(layer,"__class__")));
-      std::string name(PyStringAsString(PyDict_GetItemString(layer,"name")));
-      std::string dtype(PyStringAsString(PyDict_GetItemString(layer,"dtype")));
-      std::string input(PyStringAsString(PyDict_GetItemString(layer,"input")));
-      std::string output(PyStringAsString(PyDict_GetItemString(layer,"output")));
-
+      std::string type(PyStringAsString(PyList_GetItem(layer,0)));
+      attributes=PyList_GetItem(layer,1);
+      inputs=PyList_GetItem(layer,2);
+      outputs=PyList_GetItem(layer,3);
+      std::string dtype(PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
 
       if(dType.find(dtype)==dType.end())
          throw std::runtime_error("Type error: Layer data type "+dtype+" not yet registered in TMVA SOFIE");
@@ -149,9 +151,14 @@ RModel Parse(std::string filename){
       switch(Type.find(toLower(type))->second){
          case LayerType::DENSE : {
 
-         std::string activation(PyStringAsString(PyDict_GetItemString(layer,"activation")));
-         std::string kernel(PyStringAsString(PyDict_GetItemString(layer,"kernel")));
-         std::string bias(PyStringAsString(PyDict_GetItemString(layer,"bias")));
+         std::string activation(PyStringAsString(PyDict_GetItemString(attributes,"activation")));
+         std::string name(PyStringAsString(PyDict_GetItemString(attributes,"name")));
+         std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
+         std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
+
+         PyObject* weightNames=PyList_GetItem(layer,4);
+         std::string kernel(PyStringAsString(PyList_GetItem(weightNames,0)));
+         std::string bias(PyStringAsString(PyList_GetItem(weightNames,1)));
 
                   if(activation != "'linear'"){
                      rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"_gemm",kernel,bias,dtype)));
@@ -170,24 +177,35 @@ RModel Parse(std::string filename){
                   else{
                      rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,output,kernel,bias,dtype)));
                   }
-                     break;
+
+                  Py_XDECREF(weightNames);
+                  break;
                }
 
          case LayerType::RELU: {
+            std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
+            std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
             rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype)));  break;
             }
          case LayerType::TRANSPOSE: {
-            PyObject* permute=PyDict_GetItemString(layer,"dims");
+            std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
+            std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
+            PyObject* permute=PyDict_GetItemString(attributes,"dims");
             std::vector<int_t>dims;
             for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(permute);++tupleIter)
                dims.push_back((int_t)PyLong_AsLong(PyTuple_GetItem(permute,tupleIter)));
-            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Transpose(input,output,dims,dtype))); break;
+            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Transpose(input,output,dims,dtype)));
+
+            Py_XDECREF(permute);
+            break;
             }
          default: throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+type);
          }
          }
 
-
+   Py_XDECREF(outputs);
+   Py_XDECREF(inputs);
+   Py_XDECREF(attributes);
    Py_XDECREF(layer);
    Py_XDECREF(pModel);
 
