@@ -25,23 +25,7 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_PYTORCH
 #define TMVA_SOFIE_RMODELPARSER_PYTORCH
 
-
-#include <Python.h>
-
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
-
-
-#include "TMVA/SOFIE_common.hxx"
-#include "TMVA/OperatorList.hxx"
 #include "TMVA/RModelParser_Common.h"
-
-#include "TMVA/RModel.hxx"
-#include "Rtypes.h"
-#include "TMVA/Types.h"
-#include "TString.h"
-#include <vector>
-
 
 namespace TMVA{
 namespace Experimental{
@@ -52,8 +36,14 @@ enum class NodeType{
 
 };
 
+static std::unordered_map<std::string, ETensorType> dTypePyTorch=
+{
+   {"'Float'",ETensorType::FLOAT}
+};
+
 namespace PyTorch{
-    RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, ETensorType dtype=ETensorType::FLOAT);
+    RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
+    RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
   }
 }
 }

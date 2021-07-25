@@ -25,34 +25,20 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_KERAS
 #define TMVA_SOFIE_RMODELPARSER_KERAS
 
-
-#include <Python.h>
-
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
-
-
-#include "TMVA/SOFIE_common.hxx"
-#include "TMVA/OperatorList.hxx"
 #include "TMVA/RModelParser_Common.h"
-
-#include "TMVA/RModel.hxx"
-#include "Rtypes.h"
-#include "TMVA/Types.h"
-#include "TString.h"
-#include <vector>
-
-#include <memory>
-#include <cctype>
-#include <algorithm>
 
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
 enum class LayerType{
-   DENSE = 0, RELU = 1, TRANSPOSE = 2 //order sensitive
+   DENSE = 0, ACTIVATION = 1, RELU = 2, TRANSPOSE = 3 //order sensitive
 
+};
+
+static std::unordered_map<std::string, ETensorType> dTypeKeras=
+{
+   {"'float32'", ETensorType::FLOAT}
 };
 
 

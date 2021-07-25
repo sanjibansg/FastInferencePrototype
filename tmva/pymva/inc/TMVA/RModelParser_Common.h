@@ -9,31 +9,21 @@
 #include <numpy/arrayobject.h>
 
 #include "TMVA/RTensor.hxx"
-#include "TString.h"
-
-
 #include "TMVA/RModel.hxx"
 #include "TMVA/SOFIE_common.hxx"
-#include <algorithm>
+#include "TMVA/Types.h"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/OperatorList.hxx"
 
+#include "Rtypes.h"
+#include "TString.h"
 
 namespace TMVA{
+namespace Experimental{
+namespace SOFIE{
 
-///////////////////////////////////////////////////////////////////////////////
-/// Execute Python code from string
-///
-/// \param[in] code Python code as string
-/// \param[in] fGlobalNS Global Namespace dictionary
-/// \param[in] fLocalNS  Local  Namespace dictionary
-/// \param[in] errorMessage Error message which shall be shown if the execution fails
-/// \param[in] start Start symbol
-///
-/// Helper function to run python code from string in local namespace with
-/// error handling
-/// `start` defines the start symbol defined in PyRun_String (Py_eval_input,
-/// Py_single_input, Py_file_input)
 
-inline void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, TString errorMessage="Failed to run python code", int start=Py_single_input) {
+static void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, TString errorMessage="Failed to run python code", int start=Py_single_input) {
    PyObject *fPyReturn = PyRun_String(code, start, fGlobalNS, fLocalNS);
    if (!fPyReturn) {
       std::cout<<"Failed to run python code: " << code <<"\n";
@@ -43,30 +33,8 @@ inline void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS, T
    }
  }
 
-namespace Experimental{
-   namespace SOFIE{
-      inline RTensor<float> getArray(PyObject* value){
 
-         //Check and modify the function signature
-         PyArrayObject* weightArray = (PyArrayObject*)value;
-         std::vector<std::size_t>shapes;
-         std::vector<std::size_t>strides;
-
-         //Preparing the shapes and strides vector
-         for(int j=0; j<PyArray_NDIM(weightArray); ++j){
-            shapes.push_back((std::size_t)(PyArray_DIM(weightArray,j)));
-            strides.push_back((std::size_t)(PyArray_STRIDE(weightArray,j)));
-
-         }
-
-         //Declaring the RTensor object for storing weights values.
-         RTensor<float>x((float*)PyArray_DATA(weightArray),shapes,strides);
-         return x;
-         }
-         }
-         }
-
-inline const char* PyStringAsString(PyObject* str){
+static const char* PyStringAsString(PyObject* str){
    #if PY_MAJOR_VERSION < 3   // for Python2
       const char *stra_name = PyBytes_AsString(str);
       // need to add string delimiter for Python2
@@ -80,12 +48,28 @@ inline const char* PyStringAsString(PyObject* str){
 return name;
 }
 
-inline std::string toLower(std::string name){
-          std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-          return name;
+static ETensorType convertStringToType(std::unordered_map<std::string,ETensorType> dTypeMap,std::string dtype){
+return dTypeMap.find(dtype)->second;
+}
+
+static RTensor<float> getArray(PyObject* value){
+   //Check and modify the function signature
+   PyArrayObject* weightArray = (PyArrayObject*)value;
+   std::vector<std::size_t>shapes;
+   std::vector<std::size_t>strides;
+
+   //Preparing the shapes and strides vector
+   for(int j=0; j<PyArray_NDIM(weightArray); ++j){
+       shapes.push_back((std::size_t)(PyArray_DIM(weightArray,j)));
+       strides.push_back((std::size_t)(PyArray_STRIDE(weightArray,j)));
    }
 
-inline std::vector<size_t> getShape(PyObject* shapeTuple){
+   //Declaring the RTensor object for storing weights values.
+   RTensor<float>x((float*)PyArray_DATA(weightArray),shapes,strides);
+   return x;
+}
+
+static std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple){
 
    std::vector<size_t>inputShape;
    for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(shapeTuple);++tupleIter){
@@ -94,6 +78,8 @@ inline std::vector<size_t> getShape(PyObject* shapeTuple){
    return inputShape;
 }
 
+}
+}
 }
 
 #endif //TMVA_PYMVA_RMODELPARSER_COMMON
