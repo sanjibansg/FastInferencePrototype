@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "testPyTorchParserModule.C": "cpp",
+        "testPyTorchParser (copy).C": "cpp",
+        "generateROOTFromPyTorch.C": "cpp",
+        "generateROOTFromPyTorchSequential.C": "cpp",
+        "testPyTorchParser.C": "cpp"
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "testPyTorchParserModule.C": "cpp",
+        "testPyTorchParser.C": "cpp"
+    }
+}

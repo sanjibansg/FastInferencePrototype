@@ -1,0 +1,8 @@
+export PATH=$PATH:/localscratch/username/root-v6-25-01/
+export PATH=$PATH:/localscratch/username/root-v6-25-01/bin/
+export PATH=$PATH:/localscratch/username/root-v6-25-01/lib/
+export PYTHONPATH=$PYTHONPATH:/localscratch/username/root-v6-25-01/
+export PYTHONPATH=$PYTHONPATH:/localscratch/username/root-v6-25-01/bin/
+export PYTHONPATH=$PYTHONPATH:/localscratch/username/root-v6-25-01/lib/
+
+

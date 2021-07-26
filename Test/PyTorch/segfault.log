@@ -1,0 +1,230 @@
+sanjiban@sanjiban-HP-Notebook-PC:/media/sanjiban/Applications2/GSoC21/Test/PyTorch$ root
+   ------------------------------------------------------------------
+  | Welcome to ROOT 6.25/01                        https://root.cern |
+  | (c) 1995-2021, The ROOT Team; conception: R. Brun, F. Rademakers |
+  | Built for linuxx8664gcc on Jul 26 2021, 16:45:00                 |
+  | From heads/development@v6-25-01-1319-g22769c98e5                 |
+  | With                                                             |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'       |
+   ------------------------------------------------------------------
+
+root [0] std::vector<size_t> s1{120,1};
+root [1] std::vector<std::vector<size_t>>inputShape{s1};
+root [2] auto model = TMVA::Experimental::SOFIE::PyTorch::Parse("PyTorchModelModule.pt",inputShape);
+Torch Version: 1.9.0+cu102
+RecursiveScriptModule(
+  original_name=Model
+  (fc1): RecursiveScriptModule(original_name=Linear)
+  (relu): RecursiveScriptModule(original_name=ReLU)
+)
+RecursiveScriptModule(
+  original_name=Model
+  (fc1): RecursiveScriptModule(original_name=Linear)
+  (relu): RecursiveScriptModule(original_name=ReLU)
+)
+root [3] model.Generate();
+root [4] auto model1 = TMVA::Experimental::SOFIE::PyTorch::Parse("PyTorchModelSequential.pt",inputShape);
+Torch Version: 1.9.0+cu102
+
+ *** Break *** segmentation violation
+
+
+
+===========================================================
+There was a crash.
+This is the entire stack trace of all threads:
+===========================================================
+
+Thread 8 (Thread 0x7fce46b24700 (LWP 8355)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a5e0 <thread_status+864>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a590 <thread_status+784>, cond=0x7fce7425a5b8 <thread_status+824>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a5b8 <thread_status+824>, mutex=0x7fce7425a590 <thread_status+784>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 7 (Thread 0x7fce4f325700 (LWP 8354)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a560 <thread_status+736>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a510 <thread_status+656>, cond=0x7fce7425a538 <thread_status+696>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a538 <thread_status+696>, mutex=0x7fce7425a510 <thread_status+656>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 6 (Thread 0x7fce57b26700 (LWP 8353)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a4e0 <thread_status+608>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a490 <thread_status+528>, cond=0x7fce7425a4b8 <thread_status+568>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a4b8 <thread_status+568>, mutex=0x7fce7425a490 <thread_status+528>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 5 (Thread 0x7fce68327700 (LWP 8352)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a460 <thread_status+480>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a410 <thread_status+400>, cond=0x7fce7425a438 <thread_status+440>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a438 <thread_status+440>, mutex=0x7fce7425a410 <thread_status+400>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 4 (Thread 0x7fce70b28700 (LWP 8351)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a3e0 <thread_status+352>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a390 <thread_status+272>, cond=0x7fce7425a3b8 <thread_status+312>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a3b8 <thread_status+312>, mutex=0x7fce7425a390 <thread_status+272>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 3 (Thread 0x7fce71329700 (LWP 8350)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a360 <thread_status+224>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a310 <thread_status+144>, cond=0x7fce7425a338 <thread_status+184>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a338 <thread_status+184>, mutex=0x7fce7425a310 <thread_status+144>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 2 (Thread 0x7fce71b2a700 (LWP 8349)):
+#0  futex_wait_cancelable (private=<optimized out>, expected=0, futex_word=0x7fce7425a2e0 <thread_status+96>) at ../sysdeps/nptl/futex-internal.h:183
+#1  __pthread_cond_wait_common (abstime=0x0, clockid=0, mutex=0x7fce7425a290 <thread_status+16>, cond=0x7fce7425a2b8 <thread_status+56>) at pthread_cond_wait.c:508
+#2  __pthread_cond_wait (cond=0x7fce7425a2b8 <thread_status+56>, mutex=0x7fce7425a290 <thread_status+16>) at pthread_cond_wait.c:638
+#3  0x00007fce726cdf8b in blas_thread_server () from /home/sanjiban/.local/lib/python3.8/site-packages/numpy/core/../../numpy.libs/libopenblasp-r0-09e95953.3.13.so
+#4  0x00007fcee6cd7609 in start_thread (arg=<optimized out>) at pthread_create.c:477
+#5  0x00007fcee6ed3293 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 1 (Thread 0x7fcee6b7aa40 (LWP 8317)):
+#0  0x00007fcee6e96dff in __GI___wait4 (pid=8369, stat_loc=stat_loc
+entry=0x7ffd35d84968, options=options
+entry=0, usage=usage
+entry=0x0) at ../sysdeps/unix/sysv/linux/wait4.c:27
+#1  0x00007fcee6e96d7b in __GI___waitpid (pid=<optimized out>, stat_loc=stat_loc
+entry=0x7ffd35d84968, options=options
+entry=0) at waitpid.c:38
+#2  0x00007fcee6e060e7 in do_system (line=<optimized out>) at ../sysdeps/posix/system.c:172
+#3  0x00007fcee74d77de in TUnixSystem::StackTrace() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#4  0x00007fcee74d4665 in TUnixSystem::DispatchSignals(ESignals) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#5  <signal handler called>
+#6  0x00007fcecf7e2950 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#7  0x00007fcecf6f48a4 in _PyObject_GC_Malloc () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#8  0x00007fcecf6f4c37 in _PyObject_GC_New () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#9  0x00007fcecf7f14b4 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#10 0x00007fcecf84716c in PyObject_GetIter () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#11 0x00007fcecf5ff3d8 in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#12 0x00007fcecf60806b in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#13 0x00007fcecf7cd0a3 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#14 0x00007fcecf7e7cc0 in PyObject_Repr () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#15 0x00007fcecf7e71fa in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#16 0x00007fcecf5fcd6d in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#17 0x00007fcecf5fe46d in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#18 0x00007fcecf60806b in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#19 0x00007fcecf7cd0a3 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#20 0x00007fcecf7e7cc0 in PyObject_Repr () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#21 0x00007fcecf81a5a1 in PyFile_WriteObject () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#22 0x00007fcecf70b25f in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#23 0x00007fcecf7e71fa in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#24 0x00007fcecf8310e8 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#25 0x00007fcecf831245 in PyObject_CallFunctionObjArgs () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#26 0x00007fcecf5feb2e in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#27 0x00007fcecf752e3b in _PyEval_EvalCodeWithName () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#28 0x00007fcecf7531c2 in PyEval_EvalCodeEx () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#29 0x00007fcecf7535af in PyEval_EvalCode () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#30 0x00007fcecf71404c in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#31 0x00007fcecf714399 in PyRun_StringFlags () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#32 0x00007fcecfb3c042 in TMVA::Experimental::SOFIE::PyRunString(TString, _object*, _object*, TString, int) [clone .constprop.0] () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#33 0x00007fcecfb3c6bf in TMVA::Experimental::SOFIE::PyTorch::Parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::vector<std::vector<unsigned long, std::allocator<unsigned long> >, std::allocator<std::vector<unsigned long, std::allocator<unsigned long> > > >, std::vector<TMVA::Experimental::SOFIE::ETensorType, std::allocator<TMVA::Experimental::SOFIE::ETensorType> >) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#34 0x00007fcecfb40b8d in TMVA::Experimental::SOFIE::PyTorch::Parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::vector<std::vector<unsigned long, std::allocator<unsigned long> >, std::allocator<std::vector<unsigned long, std::allocator<unsigned long> > > >) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#35 0x00007fcede395079 in ?? ()
+#36 0x000055816f128aa0 in ?? ()
+#37 0x00007ffd35d88628 in ?? ()
+#38 0x000055816f0f4580 in ?? ()
+#39 0x000055816f0f4598 in ?? ()
+#40 0x000055816f0f4598 in ?? ()
+#41 0x00007ffd35d88750 in ?? ()
+#42 0x00007ffd35d886e0 in ?? ()
+#43 0x88321835fe408800 in ?? ()
+#44 0x000055816f196070 in ?? ()
+#45 0x0000000000000019 in ?? ()
+#46 0x0000000000000019 in ?? ()
+#47 0x00007fcee2accfc0 in cling::MultiplexInterpreterCallbacks::EnteringUserCode() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#48 0x00007fcee2b4f02f in cling::IncrementalExecutor::runStaticInitializersOnce(cling::Transaction&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#49 0x00007fcee2ac3910 in cling::Interpreter::executeTransaction(cling::Transaction&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#50 0x00007fcee2b60a65 in cling::IncrementalParser::commitTransaction(llvm::PointerIntPair<cling::Transaction*, 2u, cling::IncrementalParser::EParseResult, llvm::PointerLikeTypeTraits<cling::Transaction*>, llvm::PointerIntPairInfo<cling::Transaction*, 2u, llvm::PointerLikeTypeTraits<cling::Transaction*> > >&, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#51 0x00007fcee2b62b1a in cling::IncrementalParser::Compile(llvm::StringRef, cling::CompilationOptions const&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#52 0x00007fcee2ac54df in cling::Interpreter::EvaluateInternal(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cling::CompilationOptions, cling::Value*, cling::Transaction**, unsigned long) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#53 0x00007fcee2ac5a64 in cling::Interpreter::process(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cling::Value*, cling::Transaction**, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#54 0x00007fcee2bb2677 in cling::MetaProcessor::process(llvm::StringRef, cling::Interpreter::CompilationResult&, cling::Value*, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#55 0x00007fcee29c3b6c in HandleInterpreterException(cling::MetaProcessor*, char const*, cling::Interpreter::CompilationResult&, cling::Value*) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#56 0x00007fcee29db302 in TCling::ProcessLine(char const*, TInterpreter::EErrorCode*) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#57 0x00007fcee737cfa3 in TApplication::ProcessLine(char const*, bool, int*) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#58 0x00007fcee775623a in TRint::ProcessLineNr(char const*, char const*, int*) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libRint.so
+#59 0x00007fcee77565ba in TRint::HandleTermInput() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libRint.so
+#60 0x00007fcee74d3722 in TUnixSystem::CheckDescriptors() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#61 0x00007fcee74d5408 in TUnixSystem::DispatchOneEvent(bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#62 0x00007fcee73e2279 in TSystem::Run() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#63 0x00007fcee737a106 in TApplication::Run(bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCore.so
+#64 0x00007fcee7757c5e in TRint::Run(bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libRint.so
+#65 0x0000558167e2e180 in main ()
+===========================================================
+
+
+The lines below might hint at the cause of the crash.
+You may get help by asking at the ROOT forum https://root.cern.ch/forum
+Only if you are really convinced it is a bug in ROOT then please submit a
+report at https://root.cern.ch/bugs Please post the ENTIRE stack trace
+from above as an attachment in addition to anything else
+that might help us fixing this issue.
+===========================================================
+#6  0x00007fcecf7e2950 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#7  0x00007fcecf6f48a4 in _PyObject_GC_Malloc () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#8  0x00007fcecf6f4c37 in _PyObject_GC_New () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#9  0x00007fcecf7f14b4 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#10 0x00007fcecf84716c in PyObject_GetIter () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#11 0x00007fcecf5ff3d8 in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#12 0x00007fcecf60806b in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#13 0x00007fcecf7cd0a3 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#14 0x00007fcecf7e7cc0 in PyObject_Repr () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#15 0x00007fcecf7e71fa in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#16 0x00007fcecf5fcd6d in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#17 0x00007fcecf5fe46d in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#18 0x00007fcecf60806b in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#19 0x00007fcecf7cd0a3 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#20 0x00007fcecf7e7cc0 in PyObject_Repr () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#21 0x00007fcecf81a5a1 in PyFile_WriteObject () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#22 0x00007fcecf70b25f in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#23 0x00007fcecf7e71fa in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#24 0x00007fcecf8310e8 in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#25 0x00007fcecf831245 in PyObject_CallFunctionObjArgs () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#26 0x00007fcecf5feb2e in _PyEval_EvalFrameDefault () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#27 0x00007fcecf752e3b in _PyEval_EvalCodeWithName () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#28 0x00007fcecf7531c2 in PyEval_EvalCodeEx () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#29 0x00007fcecf7535af in PyEval_EvalCode () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#30 0x00007fcecf71404c in ?? () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#31 0x00007fcecf714399 in PyRun_StringFlags () from /lib/x86_64-linux-gnu/libpython3.8.so.1.0
+#32 0x00007fcecfb3c042 in TMVA::Experimental::SOFIE::PyRunString(TString, _object*, _object*, TString, int) [clone .constprop.0] () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#33 0x00007fcecfb3c6bf in TMVA::Experimental::SOFIE::PyTorch::Parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::vector<std::vector<unsigned long, std::allocator<unsigned long> >, std::allocator<std::vector<unsigned long, std::allocator<unsigned long> > > >, std::vector<TMVA::Experimental::SOFIE::ETensorType, std::allocator<TMVA::Experimental::SOFIE::ETensorType> >) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#34 0x00007fcecfb40b8d in TMVA::Experimental::SOFIE::PyTorch::Parse(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::vector<std::vector<unsigned long, std::allocator<unsigned long> >, std::allocator<std::vector<unsigned long, std::allocator<unsigned long> > > >) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libPyMVA.so
+#35 0x00007fcede395079 in ?? ()
+#36 0x000055816f128aa0 in ?? ()
+#37 0x00007ffd35d88628 in ?? ()
+#38 0x000055816f0f4580 in ?? ()
+#39 0x000055816f0f4598 in ?? ()
+#40 0x000055816f0f4598 in ?? ()
+#41 0x00007ffd35d88750 in ?? ()
+#42 0x00007ffd35d886e0 in ?? ()
+#43 0x88321835fe408800 in ?? ()
+#44 0x000055816f196070 in ?? ()
+#45 0x0000000000000019 in ?? ()
+#46 0x0000000000000019 in ?? ()
+#47 0x00007fcee2accfc0 in cling::MultiplexInterpreterCallbacks::EnteringUserCode() () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#48 0x00007fcee2b4f02f in cling::IncrementalExecutor::runStaticInitializersOnce(cling::Transaction&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#49 0x00007fcee2ac3910 in cling::Interpreter::executeTransaction(cling::Transaction&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#50 0x00007fcee2b60a65 in cling::IncrementalParser::commitTransaction(llvm::PointerIntPair<cling::Transaction*, 2u, cling::IncrementalParser::EParseResult, llvm::PointerLikeTypeTraits<cling::Transaction*>, llvm::PointerIntPairInfo<cling::Transaction*, 2u, llvm::PointerLikeTypeTraits<cling::Transaction*> > >&, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#51 0x00007fcee2b62b1a in cling::IncrementalParser::Compile(llvm::StringRef, cling::CompilationOptions const&) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#52 0x00007fcee2ac54df in cling::Interpreter::EvaluateInternal(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cling::CompilationOptions, cling::Value*, cling::Transaction**, unsigned long) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#53 0x00007fcee2ac5a64 in cling::Interpreter::process(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, cling::Value*, cling::Transaction**, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#54 0x00007fcee2bb2677 in cling::MetaProcessor::process(llvm::StringRef, cling::Interpreter::CompilationResult&, cling::Value*, bool) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+#55 0x00007fcee29c3b6c in HandleInterpreterException(cling::MetaProcessor*, char const*, cling::Interpreter::CompilationResult&, cling::Value*) () from /media/sanjiban/Applications2/GSoC21/root-fork/install/lib/libCling.so
+===========================================================
+
+
+Root > 
+
