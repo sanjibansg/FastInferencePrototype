@@ -8,8 +8,8 @@ int generateROOTFromPyTorchModule(){
     FILE* fp;
     fp = fopen("generatePyTorchModelModule.py", "r");
     PyRun_SimpleFile(fp, "generatePyTorchModelModule.py");
-    TFile fileWrite("PyTorchModuleModel.root","CREATE");
-    std::vector<size_t> s1{120,1};
+    TFile fileWrite("PyTorchModuleModel.root","RECREATE");
+    std::vector<size_t> s1{12,1};
     std::vector<std::vector<size_t>> inputShape{s1};
     std::cout<<"Parsing saved PyTorch nn.Module model...\n";
     SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModelModule.pt",inputShape);

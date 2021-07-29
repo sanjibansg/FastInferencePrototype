@@ -5,7 +5,7 @@ import torch.nn as nn
 class Model(nn.Module):
     def __init__(self):
         super(Model, self).__init__()
-        self.fc1 = nn.Linear(1, 120)
+        self.fc1 = nn.Linear(1, 12)
         self.relu=nn.ReLU()
 
     def forward(self, x):
@@ -21,8 +21,8 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
 
 #Constructing random test dataset
-x_train=torch.randn(120,1,requires_grad=True)
-y_train=torch.randn(120,120,requires_grad=True)
+x_train=torch.randn(12,1,requires_grad=True)
+y_train=torch.randn(12,12,requires_grad=True)
 
 for i in range(2000):
     y_pred = model(x_train)

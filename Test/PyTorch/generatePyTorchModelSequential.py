@@ -3,7 +3,7 @@ import torch.nn as nn
 
 #Define model
 model = nn.Sequential(
-           nn.Linear(1,120),
+           nn.Linear(1,12),
            nn.ReLU()
            )
 
@@ -12,8 +12,8 @@ criterion = nn.MSELoss()
 optimizer = torch.optim.SGD(model.parameters(),lr=0.01)
 
 #Constructing random test dataset
-x=torch.randn(120,1)
-y=torch.randn(120,120)
+x=torch.randn(12,1)
+y=torch.randn(12,12)
 
 for i in range(2000):
     y_pred = model(x)

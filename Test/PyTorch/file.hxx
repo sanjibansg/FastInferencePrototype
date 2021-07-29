@@ -1,14 +1,14 @@
-//Code generated automatically by TMVA for Inference of Model file [PyTorchModelSequential.pt] at [Thu Jul 29 15:24:38 2021] 
+//Code generated automatically by TMVA for Inference of Model file [file.onnx] at [Thu Jul 29 15:31:51 2021] 
 #include<algorithm>
 #include<vector>
-namespace TMVA_SOFIE_PyTorchModelSequential{
+namespace TMVA_SOFIE_file{
 namespace BLAS{
 	extern "C" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,
 	                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,
 	                       const float * beta, float * C, const int * ldc);
 }//BLAS
-float tensor_0weight[12] = {-1.11625803, -0.800215662, 0.720228851, -0.351409644, 0.157715231, -0.638390899, 0.773497581, 0.125026822, -0.235511839, 0.884459972, 0.366095781, 0.440946996};
 float tensor_0bias[12] = {0.254049063, -0.00231359177, -0.675640047, -0.246749759, 0.000459161121, -0.327370226, -0.72559768, -0.117427371, 0.220769405, 0.319470078, 0.0186114535, 0.387177944};
+float tensor_0weight[12] = {-1.11625803, -0.800215662, 0.720228851, -0.351409644, 0.157715231, -0.638390899, 0.773497581, 0.125026822, -0.235511839, 0.884459972, 0.366095781, 0.440946996};
 float tensor_4[144];
 float tensor_3[144];
 std::vector<float> infer(float* tensor_input1){
@@ -29,4 +29,4 @@ std::vector<float> infer(float* tensor_input1){
 	std::vector<float> ret (tensor_4, tensor_4 + sizeof(tensor_4) / sizeof(tensor_4[0]));
 	return ret;
 }
-} //TMVA_SOFIE_PyTorchModelSequential
+} //TMVA_SOFIE_file

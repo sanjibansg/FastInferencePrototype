@@ -1,5 +1,4 @@
 #include "TMVA/RModelParser_PyTorch.h"
-#include "PyTorchModuleModel.hxx"
 #include "PyTorchSequentialModel.hxx"
 
 using namespace TMVA::Experimental;
@@ -8,7 +7,7 @@ int testPyTorchParser() {
 
 float input[]={-1.2133,0.1405,0.3343,0.8215,-0.3429,1.6881,1.6557,0.5423,1.4364,-0.7098,0.0413,-0.9946};
 
-std::cout<<"Testing PyTorch Parser for nn.Module model\n";
+std::cout<<"Testing PyTorch Parser for nn.Sequential model\n";
 std::vector<float> outModule = TMVA_SOFIE_PyTorchModelSequential::infer(input);
 Py_Initialize();
 PyObject* main = PyImport_AddModule("__main__");
@@ -37,7 +36,7 @@ for (auto i = outModule.begin(); i != outModule.end(); ++i)
 std::cout<<"\n\noutMod done \n\n";
 
 
-
+cout<<value<<endl<<endl;
 for (auto i = values.begin(); i != values.end(); ++i)
     std::cout << *i << ' ';
 return 0;

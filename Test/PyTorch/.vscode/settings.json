@@ -4,6 +4,10 @@
         "testPyTorchParser (copy).C": "cpp",
         "generateROOTFromPyTorch.C": "cpp",
         "generateROOTFromPyTorchSequential.C": "cpp",
-        "testPyTorchParser.C": "cpp"
+        "testPyTorchParser.C": "cpp",
+        "testPyTorchParserSequential.C": "cpp",
+        "generateROOTFromPyTorchModule.C": "cpp",
+        "testPyTorchParsers.C": "cpp",
+        "testPyTorchParser1.C": "cpp"
     }
 }

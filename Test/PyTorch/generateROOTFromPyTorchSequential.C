@@ -2,25 +2,30 @@
 
 using namespace TMVA::Experimental;
 
-int generateROOTFromPyTorchModule(){
+int generateROOTFromPyTorchSequential(){
     Py_Initialize();
-    std::cout<<"Generating PyTorch nn.Module model...\n";
+    std::cout<<"Generating PyTorch nn.Sequential model...";
     FILE* fp;
-    fp = fopen("generatePyTorchModelModule.py", "r");
-    PyRun_SimpleFile(fp, "generatePyTorchModelModule.py");
-    TFile fileWrite("PyTorchModuleModel.root","CREATE");
-    std::vector<size_t> s1{120,1};
+    fp = fopen("generatePyTorchModelSequential.py", "r");
+    PyRun_SimpleFile(fp, "generatePyTorchModelSequential.py");
+    std::cout<<"OK\n";
+    TFile fileWrite("PyTorchSequentialModel.root","RECREATE");
+    std::vector<size_t> s1{12,1};
     std::vector<std::vector<size_t>> inputShape{s1};
-    std::cout<<"Parsing saved PyTorch nn.Module model...\n";
-    SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModelModule.pt",inputShape);
+    std::cout<<"Parsing saved PyTorch nn.Sequential model...";
+    SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModelSequential.pt",inputShape);
     model.Generate();
-    std::cout<<"Writing PyTorch nn.Sequential RModel into a ROOT file...\n";
+    std::cout<<"OK\n";
+    std::cout<<"Writing PyTorch nn.Sequential RModel into a ROOT file...";
     model.Write("model");
     fileWrite.Close();
-    TFile fileRead("PyTorchModuleModel.root","READ");
+    std::cout<<"OK\n";
+    TFile fileRead("PyTorchSequentialModel.root","READ");
     SOFIE::RModel *modelPtr;
     fileRead.GetObject("model",modelPtr);
     fileRead.Close();
-    modelPtr->OutputGenerated("PyTorchModuleModel.hxx");
+    std::cout<<"Reading the saved ROOT file and generating the header file for RModel...";
+    modelPtr->OutputGenerated("PyTorchSequentialModel.hxx");
+    std::cout<<"OK\n";
     return 0;
 }
