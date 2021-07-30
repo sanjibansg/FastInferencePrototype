@@ -1,6 +1,8 @@
 //Code generated automatically by TMVA for Inference of Model file [file.onnx] at [Thu Jul 29 15:31:51 2021] 
 #include<algorithm>
 #include<vector>
+#include <eigen3/Eigen/Dense>
+
 namespace TMVA_SOFIE_file{
 namespace BLAS{
 	extern "C" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,

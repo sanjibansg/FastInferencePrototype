@@ -1,4 +1,4 @@
-//Code generated automatically by TMVA for Inference of Model file [PyTorchModelSequential.pt] at [Thu Jul 29 15:24:38 2021] 
+//Code generated automatically by TMVA for Inference of Model file [PyTorchModelSequential.pt] at [Fri Jul 30 14:48:50 2021] 
 #include<algorithm>
 #include<vector>
 namespace TMVA_SOFIE_PyTorchModelSequential{
@@ -6,24 +6,26 @@ namespace BLAS{
 	extern "C" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,
 	                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,
 	                       const float * beta, float * C, const int * ldc);
+	extern "C" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,
+	                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);
 }//BLAS
-float tensor_0weight[12] = {-1.11625803, -0.800215662, 0.720228851, -0.351409644, 0.157715231, -0.638390899, 0.773497581, 0.125026822, -0.235511839, 0.884459972, 0.366095781, 0.440946996};
-float tensor_0bias[12] = {0.254049063, -0.00231359177, -0.675640047, -0.246749759, 0.000459161121, -0.327370226, -0.72559768, -0.117427371, 0.220769405, 0.319470078, 0.0186114535, 0.387177944};
-float tensor_4[144];
-float tensor_3[144];
+float tensor_0weight[24] = {-0.102689922, -0.0337643921, 0.42570278, -0.115919657, 0.259498179, 0.450492561, 0.391875088, 0.34471029, -0.160325885, 0.468532026, -0.224604845, 0.195395291, 0.466508865, -0.277709663, -0.122888774, -0.161971793, -0.0661229193, -0.366587251, -0.349220008, -0.0955176428, -0.17071569, -0.0883811712, -0.301739037, -0.178474665};
+float tensor_0bias[12] = {-0.0537942611, 0.130939782, -0.161948621, -0.0492868125, -0.261009991, -0.434376359, -0.0537942611, 0.130939782, -0.161948621, -0.0492868125, -0.261009991, -0.434376359};
+float tensor_4[12];
+float tensor_3[12];
 std::vector<float> infer(float* tensor_input1){
-	char op_0_transA = 'n';
-	char op_0_transB = 't';
-	int op_0_m = 12;
-	int op_0_n = 12;
-	int op_0_k = 1;
 	float op_0_alpha = 1;
 	float op_0_beta = 1;
-	int op_0_lda = 1;
-	int op_0_ldb = 1;
+	char op_0_transA = 'n';
+	char op_0_transB = 't';
+	int op_0_m = 2;
+	int op_0_n = 6;
+	int op_0_k = 4;
+	int op_0_lda = 4;
+	int op_0_ldb = 4;
 	std::copy(tensor_0bias, tensor_0bias + 12, tensor_3);
 	BLAS::sgemm_(&op_0_transB, &op_0_transA, &op_0_n, &op_0_m, &op_0_k, &op_0_alpha, tensor_0weight, &op_0_ldb, tensor_input1, &op_0_lda, &op_0_beta, tensor_3, &op_0_n);
-	for (int id = 0; id < 144 ; id++){
+	for (int id = 0; id < 12 ; id++){
 		tensor_4[id] = ((tensor_3[id] > 0 )? tensor_3[id] : 0);
 	}
 	std::vector<float> ret (tensor_4, tensor_4 + sizeof(tensor_4) / sizeof(tensor_4[0]));

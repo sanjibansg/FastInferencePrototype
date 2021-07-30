@@ -8,6 +8,7 @@
         "testPyTorchParserSequential.C": "cpp",
         "generateROOTFromPyTorchModule.C": "cpp",
         "testPyTorchParsers.C": "cpp",
-        "testPyTorchParser1.C": "cpp"
+        "testPyTorchParser1.C": "cpp",
+        "ostream": "cpp"
     }
 }

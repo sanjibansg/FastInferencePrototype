@@ -6,12 +6,8 @@ using namespace TMVA::Experimental;
 
 int testPyTorchParser() {
 
-float input[]={-1.2133,0.1405,0.3343,0.8215,-0.3429,1.6881,1.6557,0.5423,1.4364,-0.7098,0.0413,-0.9946};
-
-std::cout<<"Testing PyTorch Parser for nn.Module model\n";
-std::vector<float> outModule = TMVA_SOFIE_PyTorchModelSequential::infer(input);
-Py_Initialize();
-PyObject* main = PyImport_AddModule("__main__");
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
     if (!fGlobalNS) {
@@ -21,26 +17,44 @@ PyObject* main = PyImport_AddModule("__main__");
         throw std::runtime_error("Can't init local namespace for Python");
         }
 
-SOFIE::PyRunString("import torch",fGlobalNS,fLocalNS);
-SOFIE::PyRunString("model=torch.jit.load('PyTorchModelSequential.pt')",fGlobalNS,fLocalNS);
-SOFIE::PyRunString("ip=torch.reshape(torch.FloatTensor([-1.2133,0.1405,0.3343,0.8215,-0.3429,1.6881,1.6557,0.5423,1.4364,-0.7098,0.0413,-0.9946]),(12,1))",fGlobalNS,fLocalNS);
-SOFIE::PyRunString("op=model(ip).detach().numpy()",fGlobalNS,fLocalNS);
-PyObject* output = PyDict_GetItemString(fLocalNS,"op");
-RTensor<float> value=SOFIE::getArray(output);
+    int errSequential=0,errModule=0;
 
-float* valOp=(float*)value.GetData();
-std::vector<float>values{valOp,valOp+value.GetSize()};
+    std::cout<<"Testing PyTorch Parser for nn.Sequential model...";
+    float inputSequential[]={-1.6207,  0.6133, 0.5058, -1.2560, -0.7750, -1.6701, 0.8171, -0.2858};
+    std::vector<float> outputSequential = TMVA_SOFIE_PyTorchModelSequential::infer(inputSequential);
+    SOFIE::PyRunString("import torch",fGlobalNS,fLocalNS);
+    SOFIE::PyRunString("model=torch.jit.load('PyTorchModelSequential.pt')",fGlobalNS,fLocalNS);
+    SOFIE::PyRunString("ip=torch.reshape(torch.FloatTensor([-1.6207,  0.6133, 0.5058, -1.2560, -0.7750, -1.6701, 0.8171, -0.2858]),(2,4))",fGlobalNS,fLocalNS);
+    SOFIE::PyRunString("op=model(ip).detach().numpy()",fGlobalNS,fLocalNS);
+    RTensor<float> pSequentialValues=SOFIE::getArray(PyDict_GetItemString(fLocalNS,"op"));
+    float* pSequentialValVec=(float*)pSequentialValues.GetData();
+    std::vector<float>pOutputSequential{pSequentialValVec,pSequentialValVec+pSequentialValues.GetSize()};
+    if(outputSequential!=pOutputSequential){
+        std::cout<<"\nOutputs from parsed PyTorch nn.Sequential model doesn't matches with the actual model outputs\n";
+        errSequential=1;
+    }
+    else{
+        std::cout<<" OK\n";
+    }
 
+    std::cout<<"Testing PyTorch Parser for nn.Module model...";
+    float inputModule[]={0.5516,  0.3585, -0.4854, -1.3884,  0.8057, -0.9449, 0.5626, -0.6466, -1.8818,  0.4736,  1.1102,  1.8694};
+    std::vector<float> outputModule = TMVA_SOFIE_PyTorchModelModule::infer(inputModule);
+    SOFIE::PyRunString("modelModule=torch.jit.load('PyTorchModelModule.pt')",fGlobalNS,fLocalNS);
+    SOFIE::PyRunString("ipModule=torch.reshape(torch.FloatTensor([0.5516,  0.3585, -0.4854, -1.3884,  0.8057, -0.9449, 0.5626, -0.6466, -1.8818,  0.4736,  1.1102,  1.8694]),(2,6))",fGlobalNS,fLocalNS);
+    SOFIE::PyRunString("opModule=modelModule(ipModule).detach().numpy().reshape(2,12)",fGlobalNS,fLocalNS);
+    RTensor<float> pModuleValues=SOFIE::getArray(PyDict_GetItemString(fLocalNS,"opModule"));
+    float* pModuleValVec=(float*)pModuleValues.GetData();
+    std::vector<float>pOutputModule{pModuleValVec,pModuleValVec+pModuleValues.GetSize()};
+    if(outputModule!=pOutputModule){
+        std::cout<<"\nOutputs from parsed PyTorch nn.Module model doesn't matches with the actual model outputs\n";
+        errModule=1;
+    }
+    else{
+        std::cout<<" OK\n";
+    }
 
-for (auto i = outModule.begin(); i != outModule.end(); ++i)
-    std::cout << *i << ' ';
-std::cout<<"\n\noutMod done \n\n";
-
-
-
-for (auto i = values.begin(); i != values.end(); ++i)
-    std::cout << *i << ' ';
-return 0;
+    return errSequential || errModule;
 }
 
 

@@ -10,7 +10,7 @@ int generateROOTFromPyTorchSequential(){
     PyRun_SimpleFile(fp, "generatePyTorchModelSequential.py");
     std::cout<<"OK\n";
     TFile fileWrite("PyTorchSequentialModel.root","RECREATE");
-    std::vector<size_t> s1{12,1};
+    std::vector<size_t> s1{2,4};
     std::vector<std::vector<size_t>> inputShape{s1};
     std::cout<<"Parsing saved PyTorch nn.Sequential model...";
     SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModelSequential.pt",inputShape);
@@ -20,11 +20,11 @@ int generateROOTFromPyTorchSequential(){
     model.Write("model");
     fileWrite.Close();
     std::cout<<"OK\n";
+    std::cout<<"Reading the saved ROOT file and generating the header file for RModel...";
     TFile fileRead("PyTorchSequentialModel.root","READ");
     SOFIE::RModel *modelPtr;
     fileRead.GetObject("model",modelPtr);
     fileRead.Close();
-    std::cout<<"Reading the saved ROOT file and generating the header file for RModel...";
     modelPtr->OutputGenerated("PyTorchSequentialModel.hxx");
     std::cout<<"OK\n";
     return 0;
