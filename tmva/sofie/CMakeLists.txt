@@ -11,8 +11,6 @@
 
 #sofie is built only if protobuf is found
 
-
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   HEADERS
    TMVA/OperatorList.hxx
@@ -25,9 +23,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
   SOURCES
     src/RModel.cxx
     src/SOFIE_common.cxx
-  LIBRARIES
-    ${Protobuf_LIBRARIES}
-
   DEPENDENCIES
     TMVA
 )

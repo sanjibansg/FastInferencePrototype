@@ -1,5 +1,6 @@
 #include "TMVA/RModelParser_PyTorch.h"
 
+
 namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
@@ -12,9 +13,31 @@ std::unordered_map<std::string, NodeType> NType =
     };
 
 
-
-
 namespace PyTorch{
+
+void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
+   if (!fPyReturn) {
+      std::cout<<"Failed to run python code: " << code <<"\n";
+      std::cout<<"Python error message:\n";
+      PyErr_Print();
+   }
+ }
+
+const char* PyStringAsString(PyObject* str){
+   #if PY_MAJOR_VERSION < 3   // for Python2
+      const char *stra_name = PyBytes_AsString(str);
+      // need to add string delimiter for Python2
+      TString sname = TString::Format("'%s'",stra_name);
+      const char * name = sname.Data();
+   #else   // for Python3
+      PyObject* repr = PyObject_Repr(str);
+      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
+      const char *name = PyBytes_AsString(stra);
+   #endif
+return name;
+}
+
 
 RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> inputDTypes){
     char sep='/';
@@ -39,18 +62,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
     RModel rmodel(filename, parsetime);
 
     Py_Initialize();
-    /*
-    Py_NoSiteFlag = 1;
-    std::string PyPrefix(Py_GetPrefix()); // This is just a native class of ours similar to CString
-    if (!PyPrefix.empty())
-   {
-      // If we have got this far then this indicates a full version of Python is present.
-      // This reinitialize after resetting the NoSiteFlag.
-      Py_Finalize();
-      Py_NoSiteFlag = 0;
-
-      }
-      */
     PyObject* main = PyImport_AddModule("__main__");
     PyObject* fGlobalNS = PyModule_GetDict(main);
     PyObject* fLocalNS = PyDict_New();
@@ -118,7 +129,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                 throw std::runtime_error("Type Error: TMVA SOFIE does not yet support the input tensor data type"+ConvertTypeToString(inputDType));
         }
         }
-    Py_XDECREF(pInputs);
+
 
     //Extracting the model information in list modelData
     PyRunString("modelData=[]",fGlobalNS,fLocalNS);
@@ -140,7 +151,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                 "    modelData.append(nodeData)",fGlobalNS,fLocalNS);
     Py_ssize_t modelIterator, modelSize;
     PyObject* pModel = PyDict_GetItemString(fLocalNS,"modelData");
-    PyObject* node,*attributes,*inputs,*outputs,*nodeDType;
+    PyObject* node,*attributes,*inputs,*outputs;
     modelSize = PyList_Size(pModel);
 
     for(modelIterator=0;modelIterator<modelSize;++modelIterator){
@@ -153,7 +164,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         attributes=PyList_GetItem(node,1);
         inputs=PyList_GetItem(node,2);
         outputs=PyList_GetItem(node,3);
-        ETensorType nodeDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
+        ETensorType nodeDType=ConvertStringToType(PyStringAsString(PyList_GetItem(PyList_GetItem(node,4),0)));
 
         switch(NType.find(type)->second){
             case NodeType::GEMM : {
@@ -215,7 +226,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                     throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + ConvertTypeToString(nodeDType));
                 }
 
-                Py_XDECREF(permute);
+                //Py_XDECREF(permute);
                 break;
                 }
 
@@ -223,34 +234,33 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
                 throw std::runtime_error("Node Error: TMVA SOFIE does not yet support node type " + type);
             }
             }
-    Py_XDECREF(nodeDType);
-    Py_XDECREF(outputs);
-    Py_XDECREF(inputs);
-    Py_XDECREF(attributes);
-    Py_XDECREF(node);
-    Py_XDECREF(pModel);
-    
+
 
     //Extracting model weights to add the initialized tensors to the RModel
     PyRunString("weightNames=[k for k in graph[1].keys()]",fGlobalNS,fLocalNS);
+    //crashing here for second call
     PyRunString("weights=[v.numpy() for v in graph[1].values()]",fGlobalNS,fLocalNS);
     PyRunString("weightDTypes=[v.type()[6:-6] for v in graph[1].values()]",fGlobalNS,fLocalNS);
     PyObject* weightNames = PyDict_GetItemString(fLocalNS,"weightNames");
     PyObject* weightTensors = PyDict_GetItemString(fLocalNS,"weights");
     PyObject* weightDTypes = PyDict_GetItemString(fLocalNS,"weightDTypes");
-    PyObject* weightTensor;
+    PyArrayObject* weightTensor;
     for(Py_ssize_t weightIter=0; weightIter<PyList_Size(weightNames);++weightIter){
-        weightTensor= PyList_GetItem(weightTensors,weightIter);
+        weightTensor= (PyArrayObject*)PyList_GetItem(weightTensors,weightIter);
         std::string weightName(PyStringAsString(PyList_GetItem(weightNames,weightIter)));
-        ETensorType weightDType=convertStringToType(dTypePyTorch, PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
-
+        ETensorType weightDType=ConvertStringToType(PyStringAsString(PyList_GetItem(weightDTypes,weightIter)));
+        std::vector<std::size_t> valueShape;
+        std::size_t valueSize=1;
+        for(int j=0; j<PyArray_NDIM(weightTensor); ++j){
+            valueShape.push_back((std::size_t)(PyArray_DIM(weightTensor,j)));
+            valueSize*=(std::size_t)(PyArray_DIM(weightTensor,j));
+        }
         switch(weightDType){
             case ETensorType::FLOAT:{
-                //Converting the numpy array object to RTensor
-                RTensor<float> value=getArray(weightTensor);
-                std::shared_ptr<void> data(malloc(value.GetSize() * sizeof(float)), free);
-                std::memcpy(data.get(),value.GetData(),value.GetSize() * sizeof(float));
-                rmodel.AddInitializedTensor(weightName, ETensorType::FLOAT,value.GetShape(), data);
+                float* value = (float*) PyArray_DATA(weightTensor);
+                std::shared_ptr<void> data(malloc(valueSize * sizeof(float)), free);
+                std::memcpy(data.get(),value,valueSize * sizeof(float));
+                rmodel.AddInitializedTensor(weightName, ETensorType::FLOAT,valueShape, data);
                 break;
                 }
             default:
@@ -258,10 +268,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
             }
     }
 
-    Py_XDECREF(weightDTypes);
-    Py_XDECREF(weightNames);
-    Py_XDECREF(weightTensors);
-    Py_XDECREF(weightTensor);
 
     //Extracting output tensor names
     PyRunString("outputs=[x for x in graph[0].outputs()]",fGlobalNS,fLocalNS);
@@ -272,9 +278,6 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         outputNames.push_back(PyStringAsString(PyList_GetItem(pOutputs,outputIter)));
         }
     rmodel.AddOutputTensorNameList(outputNames);
-
-    Py_XDECREF(pOutputs);
-    Py_XDECREF(fGlobalNS);
 
     return rmodel;
 }

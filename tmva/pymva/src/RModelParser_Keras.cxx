@@ -5,30 +5,16 @@ namespace Experimental{
 namespace SOFIE{
 
 
-std::unordered_map<std::string, LayerType> Type =
-    {
-        {"'Dense'", LayerType::DENSE},
-        {"'Activation'", LayerType::ACTIVATION},
-        {"'ReLU'", LayerType::RELU},
-        {"'Permute'", LayerType::TRANSPOSE}
-    };
-
-std::unordered_map<std::string, LayerType> ActivationType =
-    {
-        {"'relu'", LayerType::RELU},
-    };
-
-
 namespace INTERNAL{
 
    std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias, ETensorType dtype)
    {
       std::unique_ptr<ROperator> op;
 
-      float attr_alpha =1.0;
-      float attr_beta =1.0;
-      int_t attr_transA =1;
-      int_t attr_transB =0;
+      float attr_alpha = 1.0;
+      float attr_beta  = 1.0;
+      int_t attr_transA = 0;
+      int_t attr_transB = 0;
 
       switch(dtype){
          case ETensorType::FLOAT:
@@ -39,7 +25,7 @@ namespace INTERNAL{
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gemm does not yet support input type " + ConvertTypeToString(dtype));
          }
 
-         return std::move(op);
+         return op;
    }
 
    std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, ETensorType dtype)
@@ -52,7 +38,7 @@ namespace INTERNAL{
          default:
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Relu does not yet support input type " + ConvertTypeToString(dtype));
          }
-   return std::move(op);
+   return op;
    }
 
    std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, ETensorType dtype)
@@ -71,16 +57,46 @@ namespace INTERNAL{
          default:
             throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Transpose does not yet support input type " + ConvertTypeToString(dtype));
             }
-   return std::move(op);
+   return op;
    }
 
 }
 
+namespace PyKeras{
+
+void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS){
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, fGlobalNS, fLocalNS);
+   if (!fPyReturn) {
+      std::cout<<"Failed to run python code: " << code <<"\n";
+      std::cout<<"Python error message:\n";
+      PyErr_Print();
+   }
+ }
+
+const char* PyStringAsString(PyObject* str){
+   #if PY_MAJOR_VERSION < 3   // for Python2
+      const char *stra_name = PyBytes_AsString(str);
+      // need to add string delimiter for Python2
+      TString sname = TString::Format("'%s'",stra_name);
+      const char * name = sname.Data();
+   #else   // for Python3
+      PyObject* repr = PyObject_Repr(str);
+      PyObject* stra = PyUnicode_AsEncodedString(repr, "utf-8", "~E~");
+      const char *name = PyBytes_AsString(stra);
+   #endif
+return name;
+}
+
+std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple){
+   std::vector<size_t>inputShape;
+   for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(shapeTuple);++tupleIter){
+               inputShape.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(shapeTuple,tupleIter)));
+         }
+   return inputShape;
+}
 
 
-namespace PyKeras {
-
-RModel Parse(std::string filename){
+ RModel Parse(std::string filename){
 
    char sep = '/';
    #ifdef _WIN32
@@ -155,9 +171,9 @@ RModel Parse(std::string filename){
       attributes=PyList_GetItem(layer,1);
       inputs=PyList_GetItem(layer,2);
       outputs=PyList_GetItem(layer,3);
-      ETensorType dtype = convertStringToType(dTypeKeras, PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
+      ETensorType dtype = ConvertStringToType(PyStringAsString(PyDict_GetItemString(attributes,"dtype")));
 
-      switch(Type.find(type)->second){
+      switch(INTERNAL::Type.find(type)->second){
          case LayerType::DENSE : {
 
          std::string activation(PyStringAsString(PyDict_GetItemString(attributes,"activation")));
@@ -172,10 +188,10 @@ RModel Parse(std::string filename){
                   if(activation != "'linear'"){
                      rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,name+"Gemm",kernel,bias,dtype)));
 
-                     if(ActivationType.find(activation)==ActivationType.end())
+                     if(INTERNAL::ActivationType.find(activation)==INTERNAL::ActivationType.end())
                        throw std::runtime_error("Type error: Layer activation type "+activation+" not yet registered in TMVA SOFIE");
 
-                     switch(ActivationType.find(activation)->second){
+                     switch(INTERNAL::ActivationType.find(activation)->second){
                         case LayerType::RELU: {
                            rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(name+"Gemm",output,dtype)));
                            break;
@@ -187,7 +203,7 @@ RModel Parse(std::string filename){
                      rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Gemm(input,output,kernel,bias,dtype)));
                   }
 
-                  Py_XDECREF(weightNames);
+                  //Py_XDECREF(weightNames);
                   break;
                }
 
@@ -196,7 +212,7 @@ RModel Parse(std::string filename){
             std::string input(PyStringAsString(PyObject_GetAttrString(inputs,"name")));
             std::string output(PyStringAsString(PyObject_GetAttrString(outputs,"name")));
 
-            switch(ActivationType.find(activation)->second){
+            switch(INTERNAL::ActivationType.find(activation)->second){
                case LayerType::RELU: {
                   rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Relu(input,output,dtype))); break;
                   }
@@ -220,18 +236,12 @@ RModel Parse(std::string filename){
                dims.push_back((int_t)PyLong_AsLong(PyTuple_GetItem(permute,tupleIter)));
             rmodel.AddOperator(std::move(INTERNAL::make_ROperator_Transpose(input,output,dims,dtype)));
 
-            Py_XDECREF(permute);
+            //Py_XDECREF(permute);
             break;
             }
          default: throw std::runtime_error("Layer error: TMVA SOFIE does not yet suppport layer type"+type);
          }
          }
-
-   Py_XDECREF(outputs);
-   Py_XDECREF(inputs);
-   Py_XDECREF(attributes);
-   Py_XDECREF(layer);
-   Py_XDECREF(pModel);
 
 
    //Extracting model's weights
@@ -245,33 +255,33 @@ RModel Parse(std::string filename){
                "  weightProp['value']=(model.get_weights())[idx]\n"
                "  weight.append(weightProp)",fGlobalNS,fLocalNS);
 
-   PyObject *weightTensor,*weightValue;
-   PyObject* pWeight = PyDict_GetItemString(fLocalNS,"weight");
+   PyObject *weightTensor, *pWeight = PyDict_GetItemString(fLocalNS,"weight");
+   PyArrayObject *weightValue;
 
    for (Py_ssize_t weightIter = 0; weightIter < PyList_Size(pWeight); weightIter++) {
       weightTensor  = PyList_GetItem(pWeight, weightIter);
       std::string weightName(PyStringAsString(PyDict_GetItemString(weightTensor,"name")));
-      ETensorType weightType= convertStringToType(dTypeKeras,PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
-      weightValue   = PyDict_GetItemString(weightTensor,"value");
-
-      //Converting numpy array to RTensor
-      RTensor<float> value = getArray(weightValue);
+      ETensorType weightType= ConvertStringToType(PyStringAsString(PyDict_GetItemString(weightTensor,"dtype")));
+      weightValue   = (PyArrayObject*)PyDict_GetItemString(weightTensor,"value");
+      float* value = (float*) PyArray_DATA(weightValue);
+      std::vector<std::size_t> valueShape;
+      std::size_t valueSize=1;
+      for(int j=0; j<PyArray_NDIM(weightValue); ++j){
+       valueShape.push_back((std::size_t)(PyArray_DIM(weightValue,j)));
+       valueSize*=(std::size_t)(PyArray_DIM(weightValue,j));
+      }
 
    switch(weightType){
        case ETensorType::FLOAT : {
-       std::shared_ptr<void> data(malloc(value.GetSize() * sizeof(float)), free);
-       std::memcpy(data.get(),value.GetData(),value.GetSize() * sizeof(float));
-       rmodel.AddInitializedTensor(weightName, ETensorType::FLOAT,value.GetShape(), data);
+       std::shared_ptr<void> data(malloc(valueSize * sizeof(float)), free);
+       std::memcpy(data.get(),value, valueSize * sizeof(float));
+       rmodel.AddInitializedTensor(weightName, ETensorType::FLOAT,valueShape, data);
        break;
        }
        default:
           throw std::runtime_error("Type error: TMVA SOFIE does not yet weight data layer type"+ConvertTypeToString(weightType));
       }
      }
-
-   Py_XDECREF(weightTensor);
-   Py_XDECREF(weightValue);
-   Py_XDECREF(pWeight);
 
 
    //Extracting input tensor info
@@ -291,7 +301,7 @@ RModel Parse(std::string filename){
    //For multiple inputs models, the model.input_shape will return a list of tuple, each describing the input tensor shape.
    if(PyTuple_Check(pInputShapes)){
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,0)));
-      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,0)));
+      ETensorType inputDType = ConvertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,0)));
 
 
       switch(inputDType){
@@ -318,7 +328,7 @@ RModel Parse(std::string filename){
       for(Py_ssize_t inputIter = 0; inputIter < PyList_Size(pInputs);++inputIter){
 
       std::string inputName(PyStringAsString(PyList_GetItem(pInputs,inputIter)));
-      ETensorType inputDType = convertStringToType(dTypeKeras, PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
+      ETensorType inputDType = ConvertStringToType(PyStringAsString(PyList_GetItem(pInputTypes,inputIter)));
 
       switch(inputDType){
 
@@ -342,10 +352,6 @@ RModel Parse(std::string filename){
 
    }
 
-   Py_XDECREF(pInputs);
-   Py_XDECREF(pInputShapes);
-   Py_XDECREF(pInputTypes);
-
 
    //Extracting Output Tensor Names
    PyRunString("outputNames=[]",fGlobalNS,fLocalNS);
@@ -358,13 +364,10 @@ RModel Parse(std::string filename){
    }
    rmodel.AddOutputTensorNameList(outputNames);
 
-   Py_XDECREF(pOutputs);
-   Py_XDECREF(fLocalNS);
-   Py_XDECREF(fGlobalNS);
    return rmodel;
 
-     }
    }
-}
-}
-}
+ }//PyKeras
+}//SOFIE
+}//Experimental
+}//TMVA

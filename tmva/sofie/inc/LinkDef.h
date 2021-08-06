@@ -9,7 +9,11 @@
 
 
 // the classifiers
-#pragma link C++ class TMVA::Experimental::SOFIE::RModel+;
-
+#pragma link C++ class TMVA::Experimental::SOFIE::RModel-;
+#pragma link C++ class TMVA::Experimental::SOFIE::ROperator+;
+#pragma link C++ struct TMVA::Experimental::SOFIE::InitializedTensor+;
+#pragma link C++ struct TMVA::Experimental::SOFIE::TensorInfo+;
+#pragma link C++ struct TMVA::Experimental::SOFIE::InputTensorInfo+;
+#pragma link C++ struct TMVA::Experimental::SOFIE::Dim+;
 
 #endif

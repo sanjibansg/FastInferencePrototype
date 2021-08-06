@@ -7,7 +7,7 @@ namespace SOFIE{
 
 std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape){
    std::vector<Dim> fshape(shape.size());
-   for (int i =0; i < shape.size(); i++){
+   for (size_t i =0; i < shape.size(); i++){
       fshape[i].dim = shape[i];
    }
    return fshape;
@@ -28,6 +28,11 @@ std::string ConvertTypeToString(ETensorType type){
          return "other";
       }
    }
+}
+
+ETensorType ConvertStringToType(std::string type){
+   if(type == "'float32'" || type == "'Float'") return ETensorType::FLOAT;
+   else return ETensorType::UNDEFINED; 
 }
 
 namespace{
@@ -54,10 +59,10 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       std::vector<size_t> current_shape(original_shape);
       int original_length = 1;
       int target_length = 1;
-      for (int i = 0; i < original_shape.size(); i++){
+      for (size_t i = 0; i < original_shape.size(); i++){
          original_length *= original_shape[i];
       }
-      for (int i = 0; i < target_shape.size(); i++){
+      for (size_t i = 0; i < target_shape.size(); i++){
          target_length *= target_shape[i];
       }
       if (original_shape.size() > target_shape.size())   throw std::runtime_error("TMVA::SOFIE Error in Broadcasting Tensor : original array has more dimensions than target shape ");
@@ -69,7 +74,7 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
       T* new_datavector = new T[target_length];
       std::memcpy(new_datavector, original_data, original_length * sizeof(T));
 
-      for (int dim = target_shape.size() - 1; dim >= 0; dim--){
+      for (int dim = (int) target_shape.size() - 1; dim >= 0; dim--){
          if (current_shape[dim] != target_shape[dim]){
             if (current_shape[dim] != 1) throw std::runtime_error ("TMVA::SOFIE Error in Broadcasting Tensor at least one dimension to be broadcast of the original array is not 1");
 
@@ -77,7 +82,7 @@ T* UTILITY::Unidirectional_broadcast(const T* original_data, const std::vector<s
             int_t no_of_groups = 1;
             int_t no_of_copies = target_shape[dim];
 
-            for (int i = dim + 1; i < target_shape.size(); i++){
+            for (size_t i = dim + 1; i < target_shape.size(); i++){
                group_size *= current_shape[i];
             }
             for (int i = 0; i < dim; i++){
@@ -101,10 +106,6 @@ std::string UTILITY::Clean_name(std::string input_tensor_name){
 }
 
 template float* UTILITY::Unidirectional_broadcast(const float* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
-
-
-
-
 
 }//SOFIE
 }//Experimental

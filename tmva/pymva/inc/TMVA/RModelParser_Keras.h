@@ -25,7 +25,21 @@
 #ifndef TMVA_SOFIE_RMODELPARSER_KERAS
 #define TMVA_SOFIE_RMODELPARSER_KERAS
 
-#include "TMVA/RModelParser_Common.h"
+#include <Python.h>
+
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
+#include "TMVA/RTensor.hxx"
+#include "TMVA/RModel.hxx"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/Types.h"
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/OperatorList.hxx"
+
+#include "Rtypes.h"
+#include "TString.h"
+
 
 namespace TMVA{
 namespace Experimental{
@@ -36,21 +50,32 @@ enum class LayerType{
 
 };
 
-static std::unordered_map<std::string, ETensorType> dTypeKeras=
-{
-   {"'float32'", ETensorType::FLOAT}
-};
-
-
 namespace INTERNAL{
    std::unique_ptr<ROperator> make_ROperator_Gemm(std::string input,std::string output,std::string kernel,std::string bias,std::string dtype);
    std::unique_ptr<ROperator> make_ROperator_Relu(std::string input, std::string output, std::string dtype);
    std::unique_ptr<ROperator> make_ROperator_Transpose(std::string input, std::string output, std::vector<int_t> dims, std::string dtype);
+   
+   const std::unordered_map<std::string, LayerType> Type =
+    {
+        {"'Dense'", LayerType::DENSE},
+        {"'Activation'", LayerType::ACTIVATION},
+        {"'ReLU'", LayerType::RELU},
+        {"'Permute'", LayerType::TRANSPOSE}
+    };
+
+  const std::unordered_map<std::string, LayerType> ActivationType =
+    {
+        {"'relu'", LayerType::RELU},
+    };
+    
 }
 
-namespace PyKeras{
+namespace PyKeras{ 
+    void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
+    static const char* PyStringAsString(PyObject* str);
+    std::vector<size_t> getShapeFromTuple(PyObject* shapeTuple);
     RModel Parse(std::string filepath);
-  }
+  };
 }
 }
 }
