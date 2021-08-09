@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "generateROOTFromPyTorchSequential.C": "cpp",
-        "generateROOTFromPyTorchModule.C": "cpp"
-    }
-}

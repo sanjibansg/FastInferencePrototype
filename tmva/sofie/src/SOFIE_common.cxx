@@ -31,8 +31,12 @@ std::string ConvertTypeToString(ETensorType type){
 }
 
 ETensorType ConvertStringToType(std::string type){
-   if(type == "'float32'" || type == "'Float'") return ETensorType::FLOAT;
-   else return ETensorType::UNDEFINED; 
+   if(type == "'float32'" || type == "'Float'"){
+     return ETensorType::FLOAT;
+   }
+   else{
+      return ETensorType::UNDEFINED;
+   }
 }
 
 namespace{

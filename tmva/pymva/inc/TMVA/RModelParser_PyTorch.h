@@ -51,7 +51,7 @@ enum class NodeType{
 namespace PyTorch{
 
     void PyRunString(TString code, PyObject *fGlobalNS, PyObject *fLocalNS);
-    static const char* PyStringAsString(PyObject* str);
+    const char* PyStringAsString(PyObject* str);
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes, std::vector<ETensorType> dtype);
     RModel Parse(std::string filepath,std::vector<std::vector<size_t>> inputShapes);
   }
